@@ -1,2 +1,1 @@
-# transposenet
-Paying Attention to Activation Maps for Camrea Pose Regression
+# Camera Pose Regression with Transformers
