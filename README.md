@@ -6,7 +6,7 @@ The figure below illustrates our proposed scheme. The input image is
 		first encoded by a convolutional backbone. Two activation maps, at different resolutions, are transformed into sequential representations. The two activation sequences are analyzed by dual Transformer encoders, one per regression task. We depict the attention weights via
 		heatmaps. Position is best estimated by corner-like image features,
 		while orientation is estimated by edge-like features. Each Transformer encoder output is  used to regress the respective camera pose component (position x or orientation q) 
-![TransPoseNet Illustration](./img/transposenet.PNG)
+![TransPoseNet Illustration](./img/transposenet.png)
 
 
 ---
