@@ -8,6 +8,7 @@ The figure below illustrates our proposed scheme. The input image is
 		while orientation is estimated by edge-like features. Each Transformer encoder output is  used to regress the respective camera pose component (position x or orientation q) 
 ![TransPoseNet Illustration](./img/transposenet.png)
 
+The above formulation can be extended for learning multiple scenes in parallel with a simple modification (addition of two FC layers):
 
 ---
 
@@ -21,14 +22,18 @@ This code implements:
 
 ---
 
-### Prerequisites
+### Setup
 
-In order to run this repository you will need:
-
-1. Python3 (tested with Python 3.7.7)
-1. PyTorch deep learning framework (tested with version 1.0.0)
-1. Use torch==1.4.0, torchvision==0.5.0
 1. Download the [Cambridge Landmarks](http://mi.eng.cam.ac.uk/projects/relocalisation/#dataset) dataset and the [7Scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) dataset
+1. Setup a conda env:
+```
+conda create -n loc python=3.7
+pip install torch==1.4.0 torchvision==0.5.0
+pip install scikit-image
+pip install efficientnet-pytorch
+pip install pandas
+conda activate loc
+```
 
 ---
 
@@ -51,7 +56,10 @@ python main.py transposenet train ./models/backbones/efficient-net-b0.pth <path 
   ```
 python main.py transposenet test ./models/backbones/efficient-net-b0.pth <path to the CambridgeLandmarks dataset> ./datasets/CambridgeLandmarks/abs_cambridge_pose_sorted.csv_ShopFacade_test.csv --checkpoint_path <path to .pth>
   ```
-  
+
+### Pretrained models
+we make our multi-scene pretrained models available in order to reproduce result:
+model trained on 7scenes, model trained on Cambridge Landmarks
   
   
   
