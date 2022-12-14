@@ -35,6 +35,17 @@ class TransPoseNet(nn.Module):
         self.pose_token_embed_t = nn.Parameter(torch.zeros((1, decoder_dim)), requires_grad=True)
         self.pose_token_embed_rot = nn.Parameter(torch.zeros((1, decoder_dim)), requires_grad=True)
 
+        self.num_scenes = config.get("num_scenes")
+        self.multiscene = False
+        self.classify_scene = config.get("classify_scene")
+        if self.num_scenes is not None and self.num_scenes > 1:
+            self.scene_embed = nn.Linear(1, decoder_dim)
+            self.multiscene = True
+            if self.classify_scene:
+                self.avg_pooling = nn.AdaptiveAvgPool2d(1)
+                self.scene_cls = nn.Sequential(nn.Linear(1280 , self.num_scenes),
+                                               nn.LogSoftmax(dim=1))
+
         # The projection of the activation map before going into the Transformer's encoder
         self.input_proj_t = nn.Conv2d(self.backbone.num_channels[0], decoder_dim, kernel_size=1)
         self.input_proj_rot = nn.Conv2d(self.backbone.num_channels[1], decoder_dim, kernel_size=1)
@@ -70,15 +81,37 @@ class TransPoseNet(nn.Module):
         # Run through the transformer to translate to "camera-pose" language
         assert mask_t is not None
         assert mask_rot is not None
-        local_descs_t = self.transformer_t(self.input_proj_t(src_t), mask_t, pos[0], self.pose_token_embed_t)
+
+        bs = src_t.shape[0]
+        pose_token_embed_rot = self.pose_token_embed_rot.unsqueeze(1).repeat(1, bs, 1)
+        pose_token_embed_t = self.pose_token_embed_t.unsqueeze(1).repeat(1, bs, 1)
+
+        scene_dist = None
+        if self.multiscene:
+            selected_scene = data.get("scene")
+            if self.classify_scene:
+                src_scene, _ = features[2].decompose()
+                src_scene = self.avg_pooling(src_scene).flatten(1)
+                scene_dist = self.scene_cls(src_scene)
+            if selected_scene is None: # test time
+                assert(self.classify_scene)
+                selected_scene = torch.argmax(scene_dist, dim=1).to(dtype=torch.float32)
+            else:
+                selected_scene = selected_scene.unsqueeze(1)
+
+            scene_embed = self.scene_embed(selected_scene)
+            pose_token_embed_rot = scene_embed + pose_token_embed_rot
+            pose_token_embed_t = scene_embed + pose_token_embed_t
+
+        local_descs_t = self.transformer_t(self.input_proj_t(src_t), mask_t, pos[0], pose_token_embed_t)
         local_descs_rot = self.transformer_rot(self.input_proj_rot(src_rot), mask_rot, pos[1],
-                                               self.pose_token_embed_rot)
+                                               pose_token_embed_rot)
 
         # Take the global desc from the pose token
         global_desc_t = local_descs_t[:, 0, :]
         global_desc_rot = local_descs_rot[:, 0, :]
 
-        return {'global_desc_t':global_desc_t, 'global_desc_rot':global_desc_rot}
+        return {'global_desc_t':global_desc_t, 'global_desc_rot':global_desc_rot, "scene_dist":scene_dist}
 
     def forward_heads(self, transformers_res):
         """
@@ -96,7 +129,7 @@ class TransPoseNet(nn.Module):
 
         x_rot = self.regressor_head_rot(global_desc_rot)
         expected_pose = torch.cat((x_t, x_rot), dim=1)
-        return {'pose': expected_pose}
+        return {'pose': expected_pose, "scene_dist":transformers_res.get("scene_dist")}
 
     def forward(self, data):
         """ The forward pass expects a dictionary with key-value 'img' -- NestedTensor, which consists of:

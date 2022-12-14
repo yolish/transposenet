@@ -16,7 +16,7 @@ class BackboneBase(nn.Module):
         super().__init__()
         self.body = backbone
         self.reductions = reduction
-        self.reduction_map = {"reduction_3": 40, "reduction_4": 112}
+        self.reduction_map = {"reduction_3": 40, "reduction_4": 112, "reduction_6":1280}
         self.num_channels = [self.reduction_map[reduction] for reduction in self.reductions]
 
     def forward(self, tensor_list: NestedTensor):

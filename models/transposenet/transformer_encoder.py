@@ -59,7 +59,6 @@ class Transformer(nn.Module):
         pos_embed = torch.cat([pose_pos_embed, activation_pos_embed])
 
         src = src.flatten(2).permute(2, 0, 1)
-        pose_token_embed = pose_token_embed.unsqueeze(1).repeat(1, bs, 1)
         src = torch.cat([pose_token_embed, src])
         memory = self.encoder(src, src_key_padding_mask=None, pos=pos_embed)
         return memory.transpose(0,1)
