@@ -1,5 +1,5 @@
 ## Paying Attention to Activation Maps in Camera Pose Regression
-This repository implements the *TransPoseNet* architecture described in our paper: **Paying Attention to Activation Maps in Camera Pose Regression**.
+This repository implements an Transformer-Encoder based formulation for learning single- and multi- scene absolute pose regression, described in our paper: **Paying Attention to Activation Maps in Camera Pose Regression**.
 
 
 The figure below illustrates our proposed scheme. The input image is
@@ -8,7 +8,8 @@ The figure below illustrates our proposed scheme. The input image is
 		while orientation is estimated by edge-like features. Each Transformer encoder output is  used to regress the respective camera pose component (position x or orientation q) 
 ![TransPoseNet Illustration](./img/transposenet.png)
 
-The above formulation can be extended for learning multiple scenes in parallel with a simple modification (addition of two FC layers):
+The above model can be extended for learning multiple scenes in parallel with the ddition of two FC layers, one layer for classifying the scene and a second layer for encoding the scene index before adding it to the learnable tokens:
+![TransPoseNet Multi-Scene Illustration](./img/transposenet_ms.png)
 
 ---
 
