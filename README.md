@@ -57,10 +57,14 @@ python main.py transposenet train ./models/backbones/efficient-net-b0.pth <path 
   ```
 python main.py transposenet test ./models/backbones/efficient-net-b0.pth <path to the CambridgeLandmarks dataset> ./datasets/CambridgeLandmarks/abs_cambridge_pose_sorted.csv_ShopFacade_test.csv --checkpoint_path <path to .pth>
   ```
+  
+ In order to run with different configurations, you should edit ```config.json``` to have the 'transposenet' key point to the desired configuration  
+ (configurations are named by their dataset and variant single or multi-scene)
 
 ### Pretrained models
-we make our multi-scene pretrained models available in order to reproduce result:
-model trained on 7scenes, model trained on Cambridge Landmarks
+we make our multi-scene pretrained models available in order to reproduce results:
+1. [Pretrained model for the 7Scenes dataset](https://drive.google.com/file/d/1QE_gEHV46i4K2C_VcJiAdR06dckoMjgr/view?usp=share_link) (MS variant)
+2. [Pretrained model for the Cambridge Landmarks dataset](https://drive.google.com/file/d/1BcwAEwnmKlMq6KLmBB1nwPsctjJkwJk4/view?usp=share_link) (MS variant)
   
   
   
