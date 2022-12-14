@@ -9,6 +9,7 @@ import logging
 from util import utils
 import time
 from datasets.CameraPoseDataset import CameraPoseDataset
+from datasets.MSCameraPoseDataset import MSCameraPoseDataset
 from models.pose_losses import CameraPoseLoss
 from models.pose_regressors import get_model
 from os.path import join
@@ -66,6 +67,9 @@ if __name__ == "__main__":
         model.load_state_dict(torch.load(args.checkpoint_path, map_location=device_id))
         logging.info("Initializing from checkpoint: {}".format(args.checkpoint_path))
 
+    multiscene = model.classify_scene
+    classify_scene = model.classify_scene
+
     if args.mode == 'train':
         # Set to train mode
         model.train()
@@ -106,7 +110,13 @@ if __name__ == "__main__":
         else:
             transform = utils.train_transforms.get('baseline')
 
-        dataset = CameraPoseDataset(args.dataset_path, args.labels_file, transform)
+        if multiscene:
+            equalize_scenes = config.get("equalize_scenes")
+            dataset = MSCameraPoseDataset(args.dataset_path, args.labels_file, transform, equalize_scenes=equalize_scenes)
+        else:
+            dataset = CameraPoseDataset(args.dataset_path, args.labels_file, transform)
+
+
         loader_params = {'batch_size': config.get('batch_size'),
                                   'shuffle': True,
                                   'num_workers': config.get('n_workers')}
@@ -130,8 +140,8 @@ if __name__ == "__main__":
 
             for batch_idx, minibatch in enumerate(dataloader):
                 for k, v in minibatch.items():
-                    minibatch[k] = v.to(device)
-                gt_pose = minibatch.get('pose').to(dtype=torch.float32)
+                    minibatch[k] = v.to(device).to(dtype=torch.float32)
+                gt_pose = minibatch.get('pose')
                 batch_size = gt_pose.shape[0]
                 n_samples += batch_size
                 n_total_samples += batch_size
@@ -153,7 +163,12 @@ if __name__ == "__main__":
 
                 est_pose = res.get('pose')
                 # Pose loss
-                criterion = pose_loss(est_pose, gt_pose)
+                if multiscene and classify_scene:
+                    est_scene = res.get('scene_dist')
+                    gt_scene = minibatch.get('scene').to(dtype=torch.int64)
+                    criterion = pose_loss(est_pose, gt_pose) + nll_loss(est_scene, gt_scene)
+                else:
+                    criterion = pose_loss(est_pose, gt_pose)
 
                 # Collect for recoding and plotting
                 running_loss += criterion.item()
@@ -183,8 +198,8 @@ if __name__ == "__main__":
         torch.save(model.state_dict(), checkpoint_prefix + '_final.pth'.format(epoch))
 
         # Plot the loss function
-        loss_fig_path = checkpoint_prefix + "_loss_fig.png"
-        utils.plot_loss_func(sample_count, loss_vals, loss_fig_path)
+        #loss_fig_path = checkpoint_prefix + "_loss_fig.png"
+        #utils.plot_loss_func(sample_count, loss_vals, loss_fig_path)
 
     else: # Test
         # Set to eval mode
@@ -192,7 +207,10 @@ if __name__ == "__main__":
 
         # Set the dataset and data loader
         transform = utils.test_transforms.get('baseline')
-        dataset = CameraPoseDataset(args.dataset_path, args.labels_file, transform)
+        if multiscene:
+            dataset = MSCameraPoseDataset(args.dataset_path, args.labels_file, transform)
+        else:
+            dataset = CameraPoseDataset(args.dataset_path, args.labels_file, transform)
         loader_params = {'batch_size': 1,
                          'shuffle': False,
                          'num_workers': config.get('n_workers')}
@@ -203,9 +221,14 @@ if __name__ == "__main__":
         with torch.no_grad():
             for i, minibatch in enumerate(dataloader, 0):
                 for k, v in minibatch.items():
-                    minibatch[k] = v.to(device)
+                    minibatch[k] = v.to(device).to(dtype=torch.float32)
 
-                gt_pose = minibatch.get('pose').to(dtype=torch.float32)
+                if multiscene and classify_scene:
+                    # at Test time the classifier will determine the scene at a multiscene scenario
+                    minibatch['scene'] = None
+
+
+                gt_pose = minibatch.get('pose')
 
                 # Forward pass to predict the pose
                 tic = time.time()
@@ -226,4 +249,6 @@ if __name__ == "__main__":
         # Record overall statistics
         logging.info("Performance of {} on {}".format(args.checkpoint_path, args.labels_file))
         logging.info("Median pose error: {:.3f}[m], {:.3f}[deg]".format(np.nanmedian(stats[:, 0]), np.nanmedian(stats[:, 1])))
+        logging.info(
+            "Var pose error: {:.3f}[m], {:.3f}[deg]".format(np.nanstd(stats[:, 0])**2, np.nanstd(stats[:, 1])**2))
         logging.info("Mean inference time:{:.2f}[ms]".format(np.mean(stats[:, 2])))

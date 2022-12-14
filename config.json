@@ -1,7 +1,7 @@
 {
 	"general": {
 		"n_freq_print": 5,
-		"n_freq_checkpoint": 10,
+		"n_freq_checkpoint": 50,
 		"n_workers": 4,
 		"device_id": "cuda:0"
 	},
@@ -18,7 +18,80 @@
 		"lr_scheduler_gamma": 0.5,
 		"n_epochs": 600
 	},
+	"transposenet-7scenes-ms-first": {
+		"batch_size": 8,
+		"learnable": true,
+		"s_x": 0.0,
+		"s_q": -3.0,
+		"lr": 1e-4,
+		"norm": 2,
+		"weight_decay": 1e-4,
+		"eps": 1e-10,
+		"lr_scheduler_gamma": 0.1,
+		"lr_scheduler_step_size": 10,
+		"n_epochs": 30,
+		"num_encoder_layers": 6,
+		"dim_feedforward": 256,
+		"hidden_dim":256,
+		"dropout": 0.1,
+		"nheads": 4,
+        "freeze": false,
+		"use_prior_t_for_rot": false,
+		"freeze_exclude_phrase": "regressor_head_rot",
+		"num_scenes": 7,
+		"classify_scene": true,
+		"reduction": ["reduction_4", "reduction_3", "reduction_6"]
+	},
 	"transposenet": {
+		"batch_size": 8,
+		"learnable": true,
+		"s_x": -3,
+		"s_q": -6.5,
+		"lr": 1e-4,
+		"norm": 2,
+		"weight_decay": 1e-4,
+		"eps": 1e-10,
+		"lr_scheduler_gamma": 0.1,
+		"lr_scheduler_step_size": 200,
+		"n_epochs": 600,
+		"num_encoder_layers": 6,
+		"dim_feedforward": 256,
+		"hidden_dim":256,
+		"dropout": 0.1,
+		"nheads": 4,
+        "freeze": false,
+        "reduction": ["reduction_4", "reduction_3", "reduction_6"],
+		"use_prior_t_for_rot": false,
+		"num_scenes": 4,
+		"classify_scene": true,
+		"freeze_exclude_phrase": "regressor_head_rot",
+		"equalize_scenes": true
+    },
+		"transposenet-7secnes-multiscene": {
+		"batch_size": 8,
+		"learnable": true,
+		"s_x": 0.0,
+		"s_q": -3.0,
+		"lr": 1e-4,
+		"norm": 2,
+		"weight_decay": 1e-4,
+		"eps": 1e-10,
+		"lr_scheduler_gamma": 0.1,
+		"lr_scheduler_step_size": 10,
+		"n_epochs": 30,
+		"num_encoder_layers": 6,
+		"dim_feedforward": 256,
+		"hidden_dim":256,
+		"dropout": 0.1,
+		"nheads": 4,
+        "freeze": false,
+		"use_prior_t_for_rot": false,
+		"freeze_exclude_phrase": "regressor_head_rot",
+		"num_scenes": 7,
+		"classify_scene": true,
+		"reduction": ["reduction_4", "reduction_3", "reduction_6"]
+	},
+		"transposenet_cambridge-1s": {
 		"batch_size": 8,
 		"learnable": true,
 		"s_x": -3,
@@ -40,6 +113,5 @@
 		"use_prior_t_for_rot": false,
 		"freeze_exclude_phrase": "regressor_head_rot"
     }
-	
 }
 
