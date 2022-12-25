@@ -1,5 +1,5 @@
-## Paying Attention to Activation Maps in Camera Pose Regression
-This repository implements a Transformer-Encoder formulation for learning single- and multi- scene absolute pose regression, described in our paper: **Paying Attention to Activation Maps in Camera Pose Regression**.
+## Learning Single and Multi-Scene Camera Pose Regression with Transformer Encoderr
+This repository implements a Transformer-Encoder formulation for learning single- and multi- scene absolute pose regression, described in our paper: **Learning Single and Multi-Scene Camera Pose Regression with Transformer Encoders**.
 
 
 The figure below illustrates our proposed scheme. The input image is
