@@ -1,4 +1,4 @@
-## Learning Single and Multi-Scene Camera Pose Regression with Transformer Encoderr
+## Learning Single- and Multi- Scene Camera Pose Regression with Transformer Encoders
 This repository implements a Transformer-Encoder formulation for learning single- and multi- scene absolute pose regression, described in our paper: **Learning Single and Multi-Scene Camera Pose Regression with Transformer Encoders**.
 
 
